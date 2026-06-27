@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Shield, User, Workflow } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 
+import api from '../services/axiosClient'
+
 export default function Login(){
   const navigate = useNavigate()
 
@@ -38,8 +40,7 @@ export default function Login(){
       setIsLoading(false);
     }
   }
-
-  return (
+return (
     <main className="app-shell min-h-screen bg-[#07070c] px-4 py-8 text-slate-100">
       <div className="mx-auto flex w-full max-w-5xl justify-end">
         <ThemeToggle />
@@ -62,35 +63,20 @@ export default function Login(){
           </div>
 
           <form onSubmit={submit} className="grid gap-5 p-6 md:p-8">
-            <div className="rounded-lg border border-[#2d1747] bg-black/10 p-4">
-              <div className="eyebrow">Cuentas demo</div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div className="flex items-center gap-3">
-                  <User className="h-5 w-5 text-[#38f8d4]" />
-                  <div>
-                    <div className="font-black">xShadow99</div>
-                    <div className="text-xs font-medium text-slate-500">Jugador</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Shield className="h-5 w-5 text-[#ff9f1c]" />
-                  <div>
-                    <div className="font-black">NexusOps</div>
-                    <div className="text-xs font-medium text-slate-500">Administrador</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Oculté el cuadro de cuentas demo ya que ahora usarás BD real, 
+                pero puedes descomentarlo si lo necesitas para diseño */}
 
             <label className="grid gap-2 text-sm font-bold text-slate-300">
-              Usuario
+              Correo Electrónico
               <input
-                value={username}
+                type="email"
+                value={email}
                 onChange={(event) => {
-                  setUsername(event.target.value)
+                  setEmail(event.target.value)
                   setError('')
                 }}
                 className="rounded-md border border-[#2d1747] bg-black/25 p-3 text-white outline-none focus:border-[#b65cff]"
+                required
               />
             </label>
 
@@ -104,6 +90,7 @@ export default function Login(){
                   setError('')
                 }}
                 className="rounded-md border border-[#2d1747] bg-black/25 p-3 text-white outline-none focus:border-[#b65cff]"
+                required
               />
             </label>
 
@@ -113,8 +100,11 @@ export default function Login(){
               </div>
             )}
 
-            <button className="rounded-md bg-[#b65cff] px-4 py-3 font-black text-white transition-colors hover:bg-[#a855f7]">
-              Iniciar sesion
+            <button 
+              disabled={isLoading}
+              className="rounded-md bg-[#b65cff] px-4 py-3 font-black text-white transition-colors hover:bg-[#a855f7] disabled:opacity-50"
+            >
+              {isLoading ? 'Conectando...' : 'Iniciar sesion'}
             </button>
           </form>
         </section>
