@@ -1,14 +1,14 @@
-import { players } from '../data/players'
-
-const delay = (ms) => new Promise((res) => setTimeout(res, ms))
+import api from './axiosClient';
 
 export const playerService = {
-  list: async () => {
-    await delay(120)
-    return players
-  },
-  getById: async (id) => {
-    await delay(100)
-    return players.find((p) => p.id === id)
+  getRanking: async (page = 0) => {
+    try {
+      const response = await api.get(`/players/ranking?page=${page}&size=20`);
+      return response.data.content || [];
+
+    } catch (error) {
+      console.error("Error obteniendo el ranking:", error);
+      return [];
+    }
   }
-}
+};

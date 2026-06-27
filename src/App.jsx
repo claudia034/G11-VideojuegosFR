@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
+import Signup from './pages/Signup' 
 import Dashboard from './pages/Dashboard'
 import Tournaments from './pages/Tournaments'
 import CreateTournament from './pages/CreateTournament'
@@ -17,6 +18,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} /> 
       <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
       <Route path="/tournaments" element={<MainLayout><Tournaments /></MainLayout>} />
       <Route path="/tournaments/create" element={<MainLayout><CreateTournament /></MainLayout>} />

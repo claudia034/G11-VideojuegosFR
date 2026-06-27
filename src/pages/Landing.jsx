@@ -101,7 +101,7 @@ export default function Landing(){
         <nav className="home-nav-actions">
           <ThemeToggle compact />
           <Link to="/login" className="home-login-link">Iniciar sesion</Link>
-          <Link to="/login" className="home-signup-link">Entrar al lobby</Link>
+          <Link to="/signup" className="home-signup-link">Crear cuenta</Link>
         </nav>
       </header>
 
@@ -118,7 +118,7 @@ export default function Landing(){
           </p>
 
           <div className="home-actions">
-            <Link to="/login" className="home-primary-action">
+            <Link to="/signup" className="home-primary-action">
               Comenzar ahora
               <ArrowRight className="h-5 w-5" />
             </Link>

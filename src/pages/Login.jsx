@@ -1,15 +1,17 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Shield, User, Workflow } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Shield, User, Workflow} from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 
 import api from '../services/axiosClient'
 
-export default function Login(){
+export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const successMsg = location.state?.successMsg
 
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState('') 
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -19,9 +21,9 @@ export default function Login(){
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { 
-        email: email, 
-        password: password 
+      const response = await api.post('/auth/login', {
+        email: email,
+        password: password
       });
 
       const data = response.data.data;
@@ -40,7 +42,7 @@ export default function Login(){
       setIsLoading(false);
     }
   }
-return (
+  return (
     <main className="app-shell min-h-screen bg-[#07070c] px-4 py-8 text-slate-100">
       <div className="mx-auto flex w-full max-w-5xl justify-end">
         <ThemeToggle />
@@ -55,7 +57,7 @@ return (
 
             <div className="mt-12">
               <div className="eyebrow">Acceso</div>
-              <h1 className="mt-2 max-w-sm text-4xl font-black leading-tight">Inicia sesion para entrar al lobby</h1>
+              <h1 className="mt-2 max-w-sm text-4xl font-black leading-tight">Inicia sesion para entrar</h1>
               <p className="mt-4 max-w-sm text-sm font-medium leading-6 text-slate-500">
                 Usa tus credenciales y el sistema cargara automaticamente el panel de jugador o administrador.
               </p>
@@ -63,9 +65,6 @@ return (
           </div>
 
           <form onSubmit={submit} className="grid gap-5 p-6 md:p-8">
-            {/* Oculté el cuadro de cuentas demo ya que ahora usarás BD real, 
-                pero puedes descomentarlo si lo necesitas para diseño */}
-
             <label className="grid gap-2 text-sm font-bold text-slate-300">
               Correo Electrónico
               <input
@@ -100,7 +99,7 @@ return (
               </div>
             )}
 
-            <button 
+            <button
               disabled={isLoading}
               className="rounded-md bg-[#b65cff] px-4 py-3 font-black text-white transition-colors hover:bg-[#a855f7] disabled:opacity-50"
             >
