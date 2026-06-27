@@ -3,33 +3,40 @@ import { useNavigate } from 'react-router-dom'
 import { Shield, User, Workflow } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 
-const accounts = [
-  { username: 'NexusOps', password: 'demo123', role: 'admin' },
-  { username: 'xShadow99', password: 'demo123', role: 'player' }
-]
-
 export default function Login(){
   const navigate = useNavigate()
-  const [username, setUsername] = useState('xShadow99')
-  const [password, setPassword] = useState('demo123')
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const submit = (event) => {
-    event.preventDefault()
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsLoading(true);
 
-    const account = accounts.find((candidate) =>
-      candidate.username.toLowerCase() === username.trim().toLowerCase() &&
-      candidate.password === password
-    )
+    try {
+      const response = await api.post('/auth/login', { 
+        email: email, 
+        password: password 
+      });
 
-    if (!account) {
-      setError('Usuario o contrasena incorrectos.')
-      return
+      const data = response.data.data;
+
+      localStorage.setItem('nexus-access-token', data.accessToken);
+      localStorage.setItem('nexus-refresh-token', data.refreshToken);
+      localStorage.setItem('nexus-role', data.user.role);
+      localStorage.setItem('nexus-user-id', data.user.id);
+
+      navigate('/dashboard');
+
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Credenciales incorrectas.';
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
     }
-
-    localStorage.setItem('nexus-role', account.role)
-    localStorage.setItem('nexus-user', account.username)
-    navigate('/dashboard')
   }
 
   return (
