@@ -12,11 +12,26 @@ export default function Dashboard(){
   const [players, setPlayers] = useState([])
   const [matches, setMatches] = useState([])
 
-  useEffect(()=>{
-    tournamentService.list().then(setTournaments)
-    playerService.list().then(setPlayers)
-    tournamentService.getMatches('t1').then(setMatches)
-  },[])
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      const tourneyList = await tournamentService.list();
+      setTournaments(tourneyList);
+      
+      const ranking = await playerService.getRanking();
+      setPlayers(ranking);
+
+      if (tourneyList.length > 0) {
+        const matchData = await tournamentService.getMatches(tourneyList[0].id);
+        setMatches(matchData);
+      }
+    } catch (error) {
+      console.error("Error al cargar dashboard:", error);
+    }
+  };
+
+  loadData();
+}, []);
 
   const currentPlayer = players[0]
   const activeTournaments = tournaments.filter((t) => ['active', 'upcoming', 'soon'].includes(t.status))

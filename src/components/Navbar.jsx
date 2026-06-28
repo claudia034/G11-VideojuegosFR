@@ -4,20 +4,17 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Award, Bell, GitBranch, Home, LogOut, Menu, Shield, User, Workflow, X } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 
-const mainLinks = [
-  { to: '/dashboard', label: 'Lobby', icon: Home },
-  { to: '/bracket/t1', label: 'Mi Bracket', icon: GitBranch },
-  { to: '/ranking', label: 'Ranking', icon: Award },
-  { to: '/notifications', label: 'Notificaciones', icon: Bell }
-]
+import { tournamentService } from '../services/tournamentService';
 
-export default function Navbar(){
+export default function Navbar() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const role = localStorage.getItem('nexus-role') || 'player'
   const username = localStorage.getItem('nexus-user') || (role === 'admin' ? 'NexusOps' : 'xShadow99')
   const isAdmin = role === 'admin'
   const closeMenu = () => setMenuOpen(false)
+
+  const [activeTournamentId, setActiveTournamentId] = useState(null)
 
   useEffect(() => {
     document.body.classList.toggle('nav-menu-open', menuOpen)
@@ -27,6 +24,12 @@ export default function Navbar(){
     }
   }, [menuOpen])
 
+  useEffect(() => {
+    tournamentService.list().then(tournaments => {
+      if (tournaments?.length > 0) setActiveTournamentId(tournaments[0].id);
+    });
+  }, []);
+
   const logout = () => {
     localStorage.removeItem('nexus-role')
     localStorage.removeItem('nexus-user')
@@ -34,11 +37,21 @@ export default function Navbar(){
     navigate('/')
   }
 
+  const mainLinks = [
+    { to: '/dashboard', label: 'Lobby', icon: Home },
+    {
+      to: activeTournamentId ? `/bracket/${activeTournamentId}` : '/tournaments',
+      label: 'Mi Bracket',
+      icon: GitBranch
+    },
+    { to: '/ranking', label: 'Ranking', icon: Award },
+    { to: '/notifications', label: 'Notificaciones', icon: Bell }
+  ];
+
   const linkClass = ({ isActive }) =>
-    `nav-link group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-3 text-sm font-bold transition-colors ${
-      isActive
-        ? 'nav-link-active border-[#b65cff] bg-[#2a0f3d] text-white shadow-[0_0_28px_rgba(182,92,255,0.18)]'
-        : 'nav-link-idle border-[#241338] bg-[#0a0a11] text-slate-400 hover:border-[#6f3bb2] hover:text-white'
+    `nav-link group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-3 text-sm font-bold transition-colors ${isActive
+      ? 'nav-link-active border-[#b65cff] bg-[#2a0f3d] text-white shadow-[0_0_28px_rgba(182,92,255,0.18)]'
+      : 'nav-link-idle border-[#241338] bg-[#0a0a11] text-slate-400 hover:border-[#6f3bb2] hover:text-white'
     }`
 
   const menuOverlay = menuOpen && typeof document !== 'undefined'
