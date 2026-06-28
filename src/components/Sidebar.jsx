@@ -29,11 +29,11 @@ export default function Sidebar(){
         <NavItem to="/tournaments" icon={List} label="Torneos" />
         <NavItem to="/tournaments/create" icon={PlusCircle} label="Crear Torneo" />
         <NavItem to="/ranking" icon={Award} label="Ranking" />
-        <NavItem to="/bracket/t1" icon={GitBranch} label="Bracket" />
-        <NavItem to="/profile/p1" icon={Users} label="Perfil" />
+        <NavItem to="/tournaments" icon={GitBranch} label="Bracket" />
+        <NavItem to="/profile/me" icon={Users} label="Perfil" />
       </nav>
 
-      <div className="mt-auto text-xs text-slate-500 pt-6">v0.1 · UI Demo</div>
+      <div className="mt-auto text-xs text-slate-500 pt-6">v0.1 · Nexus GG</div>
     </aside>
   )
 }

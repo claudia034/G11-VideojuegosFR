@@ -1,57 +1,52 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Award, Bell, GitBranch, Home, LogOut, Menu, Shield, User, Workflow, X } from 'lucide-react'
+import { Award, BarChart3, Bell, GitBranch, Home, LogOut, Menu, Shield, User, Workflow, X } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
+import { storage } from '../services/api'
 
-import { tournamentService } from '../services/tournamentService';
+const mainLinks = [
+  { to: '/dashboard', label: 'Lobby', icon: Home },
+  { to: '/tournaments', label: 'Torneos', icon: GitBranch },
+  { to: '/ranking', label: 'Ranking', icon: Award },
+  { to: '/reports', label: 'Reportes', icon: BarChart3 },
+  { to: '/notifications', label: 'Notificaciones', icon: Bell }
+]
 
 export default function Navbar() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
-  const role = localStorage.getItem('nexus-role') || 'player'
-  const username = localStorage.getItem('nexus-user') || (role === 'admin' ? 'NexusOps' : 'xShadow99')
+  const sessionUser = storage.getUser()
+  const role = localStorage.getItem('nexus-role') || sessionUser?.role?.toLowerCase() || 'player'
+  const username = sessionUser?.email || localStorage.getItem('nexus-user') || 'Sin sesion'
   const isAdmin = role === 'admin'
+  const isOrganizer = role === 'organizer'
+  const initialsSource = sessionUser?.email || username
+  const initials = initialsSource.slice(0, 2).toUpperCase()
   const closeMenu = () => setMenuOpen(false)
-
-  const [activeTournamentId, setActiveTournamentId] = useState(null)
 
   useEffect(() => {
     document.body.classList.toggle('nav-menu-open', menuOpen)
-
     return () => {
       document.body.classList.remove('nav-menu-open')
     }
   }, [menuOpen])
 
-  useEffect(() => {
-    tournamentService.list().then(tournaments => {
-      if (tournaments?.length > 0) setActiveTournamentId(tournaments[0].id);
-    });
-  }, []);
-
   const logout = () => {
     localStorage.removeItem('nexus-role')
     localStorage.removeItem('nexus-user')
+    localStorage.removeItem('nexus-user-data')
+    localStorage.removeItem('nexus-token')
+    localStorage.removeItem('nexus-refresh-token')
     setMenuOpen(false)
     navigate('/')
   }
 
-  const mainLinks = [
-    { to: '/dashboard', label: 'Lobby', icon: Home },
-    {
-      to: activeTournamentId ? `/bracket/${activeTournamentId}` : '/tournaments',
-      label: 'Mi Bracket',
-      icon: GitBranch
-    },
-    { to: '/ranking', label: 'Ranking', icon: Award },
-    { to: '/notifications', label: 'Notificaciones', icon: Bell }
-  ];
-
   const linkClass = ({ isActive }) =>
-    `nav-link group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-3 text-sm font-bold transition-colors ${isActive
-      ? 'nav-link-active border-[#b65cff] bg-[#2a0f3d] text-white shadow-[0_0_28px_rgba(182,92,255,0.18)]'
-      : 'nav-link-idle border-[#241338] bg-[#0a0a11] text-slate-400 hover:border-[#6f3bb2] hover:text-white'
+    `nav-link group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-3 text-sm font-bold transition-colors ${
+      isActive
+        ? 'nav-link-active border-[#b65cff] bg-[#2a0f3d] text-white shadow-[0_0_28px_rgba(182,92,255,0.18)]'
+        : 'nav-link-idle border-[#241338] bg-[#0a0a11] text-slate-400 hover:border-[#6f3bb2] hover:text-white'
     }`
 
   const menuOverlay = menuOpen && typeof document !== 'undefined'
@@ -73,12 +68,12 @@ export default function Navbar() {
             <div className="mb-5 rounded-xl border border-[#3b1f5d] bg-[linear-gradient(145deg,rgba(182,92,255,0.14),rgba(56,248,212,0.06)_52%,rgba(0,0,0,0.22))] p-4">
               <div className="eyebrow">Sesion actual</div>
               <div className="mt-3 flex items-center gap-3">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-full font-black text-black ${isAdmin ? 'bg-gradient-to-br from-[#ff9f1c] to-[#b65cff]' : 'bg-gradient-to-br from-[#b65cff] to-[#38f8d4]'}`}>
-                  {isAdmin ? 'AN' : 'XS'}
+                <div className={`flex h-11 w-11 items-center justify-center rounded-full font-black text-black ${isAdmin || isOrganizer ? 'bg-gradient-to-br from-[#ff9f1c] to-[#b65cff]' : 'bg-gradient-to-br from-[#b65cff] to-[#38f8d4]'}`}>
+                  {initials}
                 </div>
                 <div className="min-w-0">
                   <div className="font-black text-white">{username}</div>
-                  <div className="text-xs font-bold uppercase text-slate-500">{isAdmin ? 'Administrador' : 'Jugador'}</div>
+                  <div className="text-xs font-bold uppercase text-slate-500">{isAdmin ? 'Administrador' : isOrganizer ? 'Organizador' : 'Jugador'}</div>
                 </div>
               </div>
             </div>
@@ -99,13 +94,13 @@ export default function Navbar() {
 
             <div className="mb-2 px-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Cuenta</div>
             <nav className="grid gap-2">
-              {isAdmin ? (
+              {isAdmin || isOrganizer ? (
                 <>
                   <NavLink to="/admin/profile" onClick={closeMenu} className={linkClass}>
                     <span className="nav-link-icon flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-white/[0.03] text-slate-300 group-hover:text-white">
                       <Shield className="h-4 w-4" />
                     </span>
-                    Perfil Admin
+                    Panel de gestion
                   </NavLink>
                   <NavLink to="/tournaments/create" onClick={closeMenu} className={linkClass}>
                     <span className="nav-link-icon flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-white/[0.03] text-slate-300 group-hover:text-white">
@@ -115,7 +110,7 @@ export default function Navbar() {
                   </NavLink>
                 </>
               ) : (
-                <NavLink to="/profile/p1" onClick={closeMenu} className={linkClass}>
+                <NavLink to="/profile/me" onClick={closeMenu} className={linkClass}>
                   <span className="nav-link-icon flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-white/[0.03] text-slate-300 group-hover:text-white">
                     <User className="h-4 w-4" />
                   </span>
@@ -144,13 +139,7 @@ export default function Navbar() {
       <header className="sticky top-0 z-[100] border-b border-[#2d1747] bg-[#0d0d14]/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'}
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen((open) => !open)}
-              className="rounded-lg border border-[#2d1747] p-2 text-slate-200 transition-colors hover:border-[#b65cff]"
-            >
+            <button type="button" aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="rounded-lg border border-[#2d1747] p-2 text-slate-200 transition-colors hover:border-[#b65cff]">
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
@@ -162,9 +151,9 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle compact />
-            <Link to={isAdmin ? '/admin/profile' : '/profile/p1'} className="flex items-center gap-2">
-              <span className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${isAdmin ? 'border-[#ff9f1c]/35 bg-[#ff9f1c]/10 text-[#ffbf69]' : 'border-[#38f8d4]/35 bg-[#38f8d4]/10 text-[#38f8d4]'}`}>
-                {isAdmin ? 'Admin' : 'Jugador'}
+            <Link to={isAdmin || isOrganizer ? '/admin/profile' : '/profile/me'} className="flex items-center gap-2">
+              <span className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${isAdmin || isOrganizer ? 'border-[#ff9f1c]/35 bg-[#ff9f1c]/10 text-[#ffbf69]' : 'border-[#38f8d4]/35 bg-[#38f8d4]/10 text-[#38f8d4]'}`}>
+                {isAdmin ? 'Admin' : isOrganizer ? 'Organizer' : 'Jugador'}
               </span>
               <span className="hidden text-sm font-semibold text-slate-500 sm:block">{username}</span>
             </Link>

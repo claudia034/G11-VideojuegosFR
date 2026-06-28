@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, ArrowRight, Bell, CalendarDays, Crown, GitBranch, Play, ShieldCheck, Sparkles, Trophy, Users } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
 import logo from '../assets/logo.svg'
+import { tournamentService } from '../services/tournamentService'
+import { playerService } from '../services/playerService'
 
 const features = [
   { icon: GitBranch, title: 'Brackets vivos', text: 'Cruces, resultados y avances listos para seguir cada ronda.' },
@@ -10,19 +12,13 @@ const features = [
   { icon: Users, title: 'Comunidad', text: 'Perfiles, ranking y notificaciones para mantener el lobby activo.' }
 ]
 
-const liveMatches = [
-  ['xShadow99', 'NovaX', '5 - 3'],
-  ['PixelRush', 'VoltKai', '2 - 5'],
-  ['Orion', 'Blaze', '4 - 4']
-]
-
-function ArenaPreview(){
+function ArenaPreview({ featuredTournament, featuredPlayers }){
   return (
     <div className="home-arena-preview" aria-hidden="true">
       <div className="home-preview-top">
         <span className="home-live-dot" />
-        <span>Night Cup #12</span>
-        <strong>LIVE</strong>
+        <span>{featuredTournament?.name || 'Torneos en plataforma'}</span>
+        <strong>{featuredTournament?.status === 'IN_PROGRESS' ? 'LIVE' : 'OPEN'}</strong>
       </div>
 
       <div className="home-preview-grid">
@@ -30,25 +26,25 @@ function ArenaPreview(){
           <div className="home-panel-header">
             <div>
               <span>Bracket</span>
-              <strong>Semifinal</strong>
+              <strong>{featuredTournament?.format || 'Formato disponible'}</strong>
             </div>
             <Trophy className="h-5 w-5" />
           </div>
 
           <div className="home-mini-bracket">
             <div className="home-mini-round">
-              <span>xShadow99</span>
-              <span>NovaX</span>
+              <span>{featuredPlayers[0]?.name || 'Jugador 1'}</span>
+              <span>{featuredPlayers[1]?.name || 'Jugador 2'}</span>
             </div>
             <div className="home-mini-connector" />
             <div className="home-mini-round home-mini-winner">
               <Crown className="h-4 w-4" />
-              <span>VoltKai</span>
+              <span>{featuredPlayers[0]?.name || 'Ganador'}</span>
             </div>
             <div className="home-mini-connector" />
             <div className="home-mini-round">
-              <span>PixelRush</span>
-              <span>Blaze</span>
+              <span>{featuredPlayers[2]?.name || 'Jugador 3'}</span>
+              <span>{featuredPlayers[3]?.name || 'Jugador 4'}</span>
             </div>
           </div>
         </div>
@@ -56,18 +52,18 @@ function ArenaPreview(){
         <div className="home-preview-panel home-score-feed">
           <div className="home-panel-header">
             <div>
-              <span>Actividad</span>
-              <strong>Ahora</strong>
+              <span>Ranking</span>
+              <strong>Top actual</strong>
             </div>
             <Activity className="h-5 w-5" />
           </div>
 
           <div className="home-match-list">
-            {liveMatches.map(([a, b, score]) => (
-              <div key={`${a}-${b}`} className="home-match-row">
-                <span>{a}</span>
-                <small>{score}</small>
-                <span>{b}</span>
+            {featuredPlayers.slice(0, 3).map((player, index) => (
+              <div key={player.id} className="home-match-row">
+                <span>{player.name}</span>
+                <small>ELO {player.rating}</small>
+                <span>Top {index + 1}</span>
               </div>
             ))}
           </div>
@@ -75,14 +71,14 @@ function ArenaPreview(){
 
         <div className="home-preview-panel home-side-card">
           <CalendarDays className="h-5 w-5" />
-          <strong>8:30 PM</strong>
-          <span>Proxima partida</span>
+          <strong>{featuredTournament?.format || 'Formato'}</strong>
+          <span>Modo del torneo</span>
         </div>
 
         <div className="home-preview-panel home-side-card">
           <Bell className="h-5 w-5" />
-          <strong>12</strong>
-          <span>Notificaciones</span>
+          <strong>{featuredTournament?.participants || 0}</strong>
+          <span>Slots del torneo</span>
         </div>
       </div>
     </div>
@@ -90,6 +86,22 @@ function ArenaPreview(){
 }
 
 export default function Landing(){
+  const [featuredTournament, setFeaturedTournament] = useState(null)
+  const [featuredPlayers, setFeaturedPlayers] = useState([])
+
+  useEffect(() => {
+    tournamentService.list().then((tournaments) => {
+      const featured = tournaments.find((tournament) => tournament.status === 'IN_PROGRESS')
+        || tournaments.find((tournament) => tournament.status === 'REGISTRATION_OPEN')
+        || tournaments[0]
+      setFeaturedTournament(featured || null)
+    }).catch(() => setFeaturedTournament(null))
+
+    playerService.list().then((players) => {
+      setFeaturedPlayers(players.slice(0, 4))
+    }).catch(() => setFeaturedPlayers([]))
+  }, [])
+
   return (
     <main className="home-page min-h-screen text-slate-100">
       <header className="home-nav">
@@ -101,7 +113,7 @@ export default function Landing(){
         <nav className="home-nav-actions">
           <ThemeToggle compact />
           <Link to="/login" className="home-login-link">Iniciar sesion</Link>
-          <Link to="/signup" className="home-signup-link">Crear cuenta</Link>
+          <Link to="/register" className="home-signup-link">Crear cuenta</Link>
         </nav>
       </header>
 
@@ -118,18 +130,18 @@ export default function Landing(){
           </p>
 
           <div className="home-actions">
-            <Link to="/signup" className="home-primary-action">
+            <Link to="/register" className="home-primary-action">
               Comenzar ahora
               <ArrowRight className="h-5 w-5" />
             </Link>
-            <Link to="/bracket/t1" className="home-secondary-action">
+            <Link to={featuredTournament ? `/bracket/${featuredTournament.id}` : '/tournaments'} className="home-secondary-action">
               <Play className="h-5 w-5" />
-              Ver demo de bracket
+              Ver bracket actual
             </Link>
           </div>
         </div>
 
-        <ArenaPreview />
+        <ArenaPreview featuredTournament={featuredTournament} featuredPlayers={featuredPlayers} />
       </section>
 
       <section className="home-feature-band" aria-label="Funciones principales">
